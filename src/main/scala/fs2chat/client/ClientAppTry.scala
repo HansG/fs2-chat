@@ -8,6 +8,8 @@ import fs2chat.{Console, Protocol, UserQuit, Username}
 import fs2.Stream
 import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
 
+import scala.io.StdIn
+
 object ClientAppTry extends IOApp:
   private val argsParser: Command[(Username, SocketAddress[IpAddress])] =
     Command("fs2chat-client", "FS2 Chat Client") {
@@ -28,18 +30,18 @@ object ClientAppTry extends IOApp:
       }
     }
 
-  val nameOpt = Opts.option[String]("user", help = "User name", "u")
+  val nameOpt = Opts.option[String]("user", help = "User name mit -u", "u")
 
   val alphaOpt = Opts
-    .option[Double]("alpha", help = "Alpha Filtering", "a")
+    .option[Double]("alpha", help = "Double eingeben mit -a!", "a")
     .withDefault(1.23)
-  val forceOpt = Opts.flag("fail", help = "Manually trigger a failure").orFalse
+  val forceOpt = Opts.flag("fail", help = "trigger failure mit -fail").orFalse
 
-  def printlnio(msg : Any) = Sync[IO].blocking(println(msg))
+  def putStrLn(msg : Any) = Sync[IO].blocking(println(msg))
 
   val versionOpt: Opts[IO[Unit]] = Opts
-    .flag("version", "Show version and Exit", "v", visibility = Visibility.Partial )
-    .orFalse.map( printlnio(_))
+    .flag("version", "Flag für: Show version and Exit mit -v", "v", visibility = Visibility.Partial )
+    .orFalse.map(v =>  putStrLn("versionOpt: "+ v))
 
   val mainOpt: Opts[IO[Unit]] =
     (nameOpt, alphaOpt, forceOpt).mapN[IO[Unit]] {
@@ -48,7 +50,7 @@ object ClientAppTry extends IOApp:
           IO.raiseError(
             new Exception(s"Manually FAIL triggered by $name! alpha=$alpha")
           )
-        else printlnio(s"Hello $name. Running with alpha=$alpha")
+        else putStrLn(s"Hello $name. Running with alpha=$alpha")
     }
 
   val runOpt = versionOpt orElse mainOpt
@@ -57,8 +59,25 @@ object ClientAppTry extends IOApp:
     header = "Testing decline+zio"
   )(versionOpt orElse mainOpt)
 
+  def effect(arg: List[String]): IO[Unit] = {
+    IO(StdIn.readLine).flatMap{ line =>
+   command.parse(line.split(" ")) match {
+      case Left(help) => // a bit odd that --help returns here
+        if (help.errors.isEmpty) putStrLn(help.show)
+        else IO.raiseError(new Exception(s"${help.errors}"))
+      case Right(value) => value.map(_ => ())
+    }
+  }
+  }
 
-  def run(args: List[String]): IO[ExitCode] =
+
+  override def run(args: List[String]): IO[ExitCode] =
+    effect(args).handleErrorWith { ex =>
+      putStrLn(s"Error ${ex}").as( ExitCode.Error)
+    }.replicateA(10).map(_ => ExitCode.Success)
+
+
+  def run0(args: List[String]): IO[ExitCode] =
     argsParser.parse(args) match
       case Left(help) => IO(System.err.println(help)).as(ExitCode.Error)
       case Right((desiredUsername, address)) =>
