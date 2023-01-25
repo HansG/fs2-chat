@@ -10,7 +10,7 @@ import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
 
 import scala.io.StdIn
 
-object ClientAppTry extends IOApp:
+object ClientAppTry extends IOApp :
   private val argsParser: Command[(Username, SocketAddress[IpAddress])] =
     Command("fs2chat-client", "FS2 Chat Client") {
       (
@@ -25,7 +25,7 @@ object ClientAppTry extends IOApp:
           .option[Int]("port", "Port of chat server")
           .withDefault(5555)
           .mapValidated(p => Port.fromInt(p).toValidNel("Invalid port number"))
-      ).mapN { case (desiredUsername, ip, port) =>
+        ).mapN { case (desiredUsername, ip, port) =>
         desiredUsername -> SocketAddress(ip, port)
       }
     }
@@ -37,11 +37,11 @@ object ClientAppTry extends IOApp:
     .withDefault(1.23)
   val forceOpt = Opts.flag("fail", help = "trigger failure mit -fail").orFalse
 
-  def putStrLn(msg : Any) = Sync[IO].blocking(println(msg))
+  def putStrLn(msg: Any) = Sync[IO].blocking(println(msg))
 
   val versionOpt: Opts[IO[Unit]] = Opts
-    .flag("version", "Flag für: Show version and Exit mit -v", "v", visibility = Visibility.Partial )
-    .orFalse.map(v =>  putStrLn("versionOpt: "+ v))
+    .flag("version", "Flag für: Show version and Exit mit -v", "v", visibility = Visibility.Partial)
+    .orFalse.map(v => putStrLn("versionOpt: " + v))
 
   val mainOpt: Opts[IO[Unit]] =
     (nameOpt, alphaOpt, forceOpt).mapN[IO[Unit]] {
@@ -60,20 +60,20 @@ object ClientAppTry extends IOApp:
   )(versionOpt orElse mainOpt)
 
   def effect(arg: List[String]): IO[Unit] = {
-    IO(StdIn.readLine).flatMap{ line =>
-   command.parse(line.split(" ")) match {
-      case Left(help) => // a bit odd that --help returns here
-        if (help.errors.isEmpty) putStrLn(help.show)
-        else IO.raiseError(new Exception(s"${help.errors}"))
-      case Right(value) => value.map(_ => ())
+    IO(StdIn.readLine).flatMap { line =>
+      command.parse(line.split(" ")) match {
+        case Left(help) => // a bit odd that --help returns here
+          if (help.errors.isEmpty) putStrLn(help.show)
+          else IO.raiseError(new Exception(s"${help.errors}"))
+        case Right(value) => value.map(_ => ())
+      }
     }
-  }
   }
 
 
   override def run(args: List[String]): IO[ExitCode] =
     effect(args).handleErrorWith { ex =>
-      putStrLn(s"Error ${ex}").as( ExitCode.Error)
+      putStrLn(s"Error ${ex}").as(ExitCode.Error)
     }.replicateA(10).map(_ => ExitCode.Success)
 
 
@@ -91,7 +91,7 @@ object ClientAppTry extends IOApp:
                   .repeatEval(Console[IO].readLine("> "))
                   .flatMap {
                     case Some(txt) => Stream(txt)
-                    case None      => Stream.raiseError[IO](new UserQuit)
+                    case None => Stream.raiseError[IO](new UserQuit)
                   }
                   .map(txt => Protocol.ClientCommand.SendMessage(txt))
                   .through(StreamEncoder.many(Protocol.ClientCommand.codec).toPipeByte)
@@ -106,9 +106,6 @@ object ClientAppTry extends IOApp:
             st.compile.drain
           }
           .as(ExitCode.Success)
-
-
-
 
 
   def run1(args: List[String]): IO[ExitCode] =
