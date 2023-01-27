@@ -2,25 +2,28 @@
 //> using scala "3.2.1"
 //> using lib "com.monovore::decline:2.4.1"
 //> using lib "org.typelevel::cats-effect:3.4.5"
-//> using mainClass "fs2chat.client.DeclineTry"
+//> using mainClass "fs2chat.client.DeclineDockerTry"
 
 
 package fs2chat.client
 
+import cats.effect.IOApp
+import com.monovore.decline.*
+import cats.implicits.*
 
 import java.net.URI
 import scala.concurrent.duration.Duration
 import java.nio.file.Path
-import cats.effect._
-import cats.implicits._
+import cats.effect.*
+import cats.implicits.*
+import com.monovore.decline.*
+import com.monovore.decline.effect.*
 
-import com.monovore.decline._
-import com.monovore.decline.effect._
+import scala.io.StdIn
 
 
 
-
-object DeclineCatsTry :
+object DeclineTry0 extends IOApp :
 
   // We'll start by defining our individual options...
   val uriOpt = Opts.option[URI]("input-uri", "Location of the remote file.")
@@ -79,13 +82,13 @@ object DeclineCatsTry :
 
 
   // And finally, we pass the validated config to a `run` function that does the real work.
-  def runApp(config: Config) = ???
+  def run(args : List[String]) : IO[ExitCode] = ???
+
+  def runApp(config: Config)  = ???
   configOpts.map(runApp)
   // res0: Opts[Nothing] = Opts([--input-uri <uri>] [--timeout <duration>] [--input-file <path>] <output-file>)
 
-
-
-class DeclineCatsTry1:
+class DeclineTry1:
   val uriOpt =
     Opts.option[URI]("uri", "Location of the remote file.")
       .validate("remote uri must be https")(_.getScheme == "https")
@@ -102,7 +105,7 @@ class DeclineCatsTry1:
 
 
 
-object DeclineCatsTry1a extends DeclineCatsTry1:
+object DeclineTry1a extends DeclineTry1:
   // Either would for two mutually-exclusive possibilities,
   // but a sealed trait is a bit more general.
   sealed trait InputConfig
@@ -125,11 +128,10 @@ object DeclineCatsTry1a extends DeclineCatsTry1:
   // configOpts: Opts[Config] = Opts(--uri <uri> [--timeout <duration>] <output-file> | --input-file <path> <output-file>)
 
 
-object DeclineCatsTry1b extends DeclineCatsTry1:
+object DeclineCatsTry extends DeclineTry1:
   // This example code uses cats-effect's IO, but the pattern works just as well for
   // imperative programs... just change the return type of the fetch functions
   // to `Future[String]`, `String`, or whatever else makes sense in your context.
-  import cats.effect.IO
 
   def fetchRemote(uri: URI, timeout: Duration): IO[String] = ???
   def fetchLocal(file: Path): IO[String] = ???
@@ -147,20 +149,41 @@ object DeclineCatsTry1b extends DeclineCatsTry1:
   // configOpts: Opts[IO[Unit]] = Opts(--uri <uri> [--timeout <duration>] <output-file> | --input-file <path> <output-file>)
 
 
-object DeclineDockerTry extends CommandIOApp(
-  name = "docker",
-  header = "Faux docker command line",
-  version = "0.0.x"
-  ):
-  case class ShowProcesses(all: Boolean)
-  case class BuildImage(dockerFile: Option[String], path: String)
-
+object DeclineDockerAppTry extends CommandIOApp(
+    name = "docker",
+    header = "Faux docker command line",
+    version = "0.0.x"
+  ) with DeclineDockerTry:
   override def main: Opts[IO[ExitCode]] =
-    (showProcessesOpts orElse buildOpts).map {
-      case c @ ShowProcesses(all) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
-      case c @ BuildImage(dockerFile, path) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
+    val opts = showProcessesOpts orElse buildOpts
+    opts.map {
+      case c@ShowProcesses(all) => IO(println("Command Execute: " + c)).as(ExitCode.Success)
+      case c@BuildImage(dockerFile, path) => IO(println("Command Execute: " + c)).as(ExitCode.Success)
     }
 
+
+object DeclineDockerTry extends IOApp with DeclineDockerTry:
+  val command = Command(name = "docker", header = "Faux docker command line" ) (showProcessesOpts orElse buildOpts)
+
+  def effect(cmd: String ) = command.parse(cmd.split(" ")).map {
+    case Left(help) => IO.raiseError(new Exception(s"${help}"))
+    case Right(product) => product match {
+      case ShowProcesses(all) => IO("Command Execute: ShowProcesses" + all)
+      case BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage $dockerFile  $path")
+    }
+  }
+
+  override def run(args: List[String]): IO[ExitCode] =
+    IO(StdIn.readLine).flatMap { line =>
+      effect(line).handleErrorWith { ex =>
+        IO(println(s"Error ${ex}"))
+      }.replicateA(10).map(_ => ExitCode.Success)
+    }
+
+
+trait DeclineDockerTry:
+  case class ShowProcesses(all: Boolean)
+  case class BuildImage(dockerFile: Option[String], path: String)
 
   val showProcessesOpts: Opts[ShowProcesses] =
     Opts.subcommand("ps", "Lists docker processes running!") {
