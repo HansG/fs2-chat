@@ -7,15 +7,20 @@
 
 package fs2chat.client
 
-import cats.effect.IOApp
-import com.monovore.decline.*
-import cats.implicits.*
 
 import java.net.URI
 import scala.concurrent.duration.Duration
 import java.nio.file.Path
+import cats.effect._
+import cats.implicits._
 
-object DeclineCatsTry extends IOApp :
+import com.monovore.decline._
+import com.monovore.decline.effect._
+
+
+
+
+object DeclineCatsTry :
 
   // We'll start by defining our individual options...
   val uriOpt = Opts.option[URI]("input-uri", "Location of the remote file.")
@@ -78,6 +83,8 @@ object DeclineCatsTry extends IOApp :
   configOpts.map(runApp)
   // res0: Opts[Nothing] = Opts([--input-uri <uri>] [--timeout <duration>] [--input-file <path>] <output-file>)
 
+
+
 class DeclineCatsTry1:
   val uriOpt =
     Opts.option[URI]("uri", "Location of the remote file.")
@@ -92,6 +99,8 @@ class DeclineCatsTry1:
 
   val outputOpt = Opts.argument[Path]("output-file")
   // outputOpt: Opts[Path] = Opts(<output-file>)
+
+
 
 object DeclineCatsTry1a extends DeclineCatsTry1:
   // Either would for two mutually-exclusive possibilities,
@@ -136,3 +145,51 @@ object DeclineCatsTry1b extends DeclineCatsTry1:
 
   val configOpts = (inputOpts, outputOpt).mapN(run)
   // configOpts: Opts[IO[Unit]] = Opts(--uri <uri> [--timeout <duration>] <output-file> | --input-file <path> <output-file>)
+
+
+object DeclineDockerTry extends CommandIOApp(
+  name = "docker",
+  header = "Faux docker command line",
+  version = "0.0.x"
+  ):
+  case class ShowProcesses(all: Boolean)
+  case class BuildImage(dockerFile: Option[String], path: String)
+
+  override def main: Opts[IO[ExitCode]] =
+    (showProcessesOpts orElse buildOpts).map {
+      case c @ ShowProcesses(all) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
+      case c @ BuildImage(dockerFile, path) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
+    }
+
+
+  val showProcessesOpts: Opts[ShowProcesses] =
+    Opts.subcommand("ps", "Lists docker processes running!") {
+      Opts.flag("all", "Whether to show all running processes.", short = "a")
+        .orFalse
+        .map(ShowProcesses)
+    }
+  // showProcessesOpts: Opts[ShowProcesses] = Opts(ps)
+
+  val dockerFileOpts: Opts[Option[String]] =
+    Opts.option[String]( "file", "The name of the Dockerfile.", short = "f" ).orNone
+  // dockerFileOpts: Opts[Option[String]] = Opts([--file <string>])
+
+  val pathOpts: Opts[String] =
+    Opts.argument[String](metavar = "path")
+  // pathOpts: Opts[String] = Opts(<path>)
+
+  val buildOpts: Opts[BuildImage] =
+    Opts.subcommand("build", "Builds a docker image!") {
+      (dockerFileOpts, pathOpts).mapN(BuildImage)
+    }
+  // buildOpts: Opts[BuildImage] = Opts(build)
+
+
+
+
+
+
+
+
+
+
