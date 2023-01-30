@@ -159,7 +159,7 @@ object DeclineCatsTry1b extends DeclineCatsTry1:
   val configOpts = (inputOpts, outputOpt).mapN(run)
   // configOpts: Opts[IO[Unit]] = Opts(--uri <uri> [--timeout <duration>] <output-file> | --input-file <path> <output-file>)
 
-object DeclineDockerAppTry extends IOApp :
+object DeclineDockerAppTry extends IOApp:
   case class ShowProcesses(all: Boolean)
   case class BuildImage(dockerFile: Option[String], path: String)
 
@@ -182,22 +182,23 @@ object DeclineDockerAppTry extends IOApp :
       (dockerFileOpts, pathOpts).mapN(BuildImage.apply)
     }
 
-  val command = Command(name = "docker", header = "Faux docker command line" ) (showProcessesOpts orElse buildOpts)
+  val command: Command[Product] = Command(name = "docker", header = "Faux docker command line" ) (showProcessesOpts orElse buildOpts)
 
-  def effect(cmd: String ) = command.parse(cmd.split(" ")).map {
-    case Left(help) => IO.raiseError(new Exception(s"${help}"))
-    case Right(product) => product match {
-      case ShowProcesses(all) => IO("Command Execute: ShowProcesses" + all)
-      case BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage $dockerFile  $path")
-    }
+  //  help =>  IO.raiseError( new Exception(s"${help}") ) ,
+
+  def effect(cmd: String ) = command.parse(cmd.split(" ")).fold { help =>  IO (  help.toString ),
+    prod  match  {
+          case c @ ShowProcesses(all) => IO("Command Execute: ShowProcesses" + c)
+          case c @ BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage $c ")//$dockerFile  $path
+        }
   }
 
   override def run(args: List[String]): IO[ExitCode] =
     IO(StdIn.readLine).flatMap { line =>
       effect(line).handleErrorWith { ex =>
         IO(println(s"Error ${ex}"))
-      }.replicateA(10).map(_ => ExitCode.Success)
-    }
+      }
+    }.replicateA(10).map(_ => ExitCode.Success)
 
 
 object DeclineDockerTry extends CommandIOApp(
