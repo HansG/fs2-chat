@@ -12,14 +12,15 @@ package fs2chat.client
 import java.net.URI
 import scala.concurrent.duration.Duration
 import java.nio.file.Path
-import cats.effect._
-import cats.implicits._
-
-import com.monovore.decline._
-import com.monovore.decline.effect._
+import cats.effect.*
+import cats.implicits.*
+import com.monovore.decline.*
+import com.monovore.decline.effect.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-import com.monovore.decline.refined._
+import com.monovore.decline.refined.*
+
+import scala.io.StdIn
 
 
 /*
@@ -158,6 +159,46 @@ object DeclineCatsTry1b extends DeclineCatsTry1:
 
   val configOpts = (inputOpts, outputOpt).mapN(run)
   // configOpts: Opts[IO[Unit]] = Opts(--uri <uri> [--timeout <duration>] <output-file> | --input-file <path> <output-file>)
+
+object DeclineDockerAppTry extends IOApp :
+  case class ShowProcesses(all: Boolean)
+  case class BuildImage(dockerFile: Option[String], path: String)
+
+  val showProcessesOpts: Opts[ShowProcesses] =
+    Opts.subcommand("ps", "Lists docker processes running!") {
+      Opts.flag("all", "Whether to show all running processes.", short = "a")
+        .orFalse
+        .map(ShowProcesses.apply)
+    }
+  val dockerFileOpts: Opts[Option[String]] =
+    Opts.option[String]( "file", "The name of the Dockerfile.", short = "f" ).orNone
+  // dockerFileOpts: Opts[Option[String]] = Opts([--file <string>])
+
+  val pathOpts: Opts[String] =
+    Opts.argument[String](metavar = "path")
+  // pathOpts: Opts[String] = Opts(<path>)
+
+  val buildOpts: Opts[BuildImage] =
+    Opts.subcommand("build", "Builds a docker image!") {
+      (dockerFileOpts, pathOpts).mapN(BuildImage.apply)
+    }
+
+  val command = Command(name = "docker", header = "Faux docker command line" ) (showProcessesOpts orElse buildOpts)
+
+  def effect(cmd: String ) = command.parse(cmd.split(" ")).map {
+    case Left(help) => IO.raiseError(new Exception(s"${help}"))
+    case Right(product) => product match {
+      case ShowProcesses(all) => IO("Command Execute: ShowProcesses" + all)
+      case BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage $dockerFile  $path")
+    }
+  }
+
+  override def run(args: List[String]): IO[ExitCode] =
+    IO(StdIn.readLine).flatMap { line =>
+      effect(line).handleErrorWith { ex =>
+        IO(println(s"Error ${ex}"))
+      }.replicateA(10).map(_ => ExitCode.Success)
+    }
 
 
 object DeclineDockerTry extends CommandIOApp(
