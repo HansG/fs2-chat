@@ -187,9 +187,9 @@ object DeclineDockerAppTry extends IOApp:
   //  help =>  IO.raiseError( new Exception(s"${help}") ) ,
 
   def effect(cmd: String ) = command.parse(cmd.split(" ")).fold { help =>  IO (  help.toString ),
-    prod  match  {
+    prod  => prod  match  {
           case c @ ShowProcesses(all) => IO("Command Execute: ShowProcesses" + c)
-          case c @ BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage $c ")//$dockerFile  $path
+          case c @ BuildImage(dockerFile, path) => IO("Command Execute: BuildImage  " + c)//$dockerFile  $path
         }
   }
 
