@@ -14,6 +14,8 @@ import com.monovore.decline.*
 
 import scala.io.StdIn
 
+/*https://mpkocher.github.io/2022/06/02/CLI-App-leveraging-ZIO-and-Decline-using-scala-cli/
+*/
 object DeclineTry extends IOApp :
 
   val nameOpt = Opts.option[String]("user", help = "User name mit -u", "u")

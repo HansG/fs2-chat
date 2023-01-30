@@ -10,7 +10,8 @@ libraryDependencies ++= Seq(
   "org.jline" % "jline" % "3.22.0",
   "org.typelevel" %% "cats-effect" % "3.4.5",
   "com.monovore" %% "decline" % "2.4.1",
-  "com.monovore" %% "decline-effect" % "2.4.1"
+  "com.monovore" %% "decline-effect" % "2.4.1",
+  "com.monovore" %% "decline-refined" % "2.4.1"
   //, "dev.zio" %% "zio" % "1.0.14"
 
 )
