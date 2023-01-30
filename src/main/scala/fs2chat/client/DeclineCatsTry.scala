@@ -1,8 +1,9 @@
 //> using platform "jvm"
 //> using scala "3.2.1"
 //> using lib "com.monovore::decline:2.4.1"
+//> using lib "com.monovore::decline-effect:2.4.1"
 //> using lib "org.typelevel::cats-effect:3.4.5"
-//> using mainClass "fs2chat.client.DeclineTry"
+//> using mainClass "fs2chat.client.DeclineDockerTry"
 
 
 package fs2chat.client
@@ -16,10 +17,22 @@ import cats.implicits._
 
 import com.monovore.decline._
 import com.monovore.decline.effect._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+import com.monovore.decline.refined._
 
 
+/*
+https://ben.kirw.in/decline/
 
-
+mit scala-cli laufen lassen:
+https://mpkocher.github.io/2022/06/02/CLI-App-leveraging-ZIO-and-Decline-using-scala-cli/
+siehe oben: //> using
+scala-cli run DeclineCatsTry.scala -- build -f hallo.scala c:/se   -> Command Execute: BuildImage(Some(hallo.scala),c:/se)
+scala-cli run DeclineCatsTry.scala -- build  c:/se                 -> Command Execute: BuildImage(None,c:/se)
+oder
+scala-cli package --jvm 17 DeclineCatsTry.scala
+*/
 object DeclineCatsTry :
 
   // We'll start by defining our individual options...
@@ -157,16 +170,16 @@ object DeclineDockerTry extends CommandIOApp(
 
   override def main: Opts[IO[ExitCode]] =
     (showProcessesOpts orElse buildOpts).map {
-      case c @ ShowProcesses(all) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
-      case c @ BuildImage(dockerFile, path) => IO(println("Command Execute: "+ c)).as(ExitCode.Success)
-    }
+      case c @ ShowProcesses(all) => IO(println("Command Execute: "+ c))
+      case c @ BuildImage(dockerFile, path) => IO(println("Command Execute: "+ c))
+    }.map ( _.as(ExitCode.Success) )
 
 
   val showProcessesOpts: Opts[ShowProcesses] =
     Opts.subcommand("ps", "Lists docker processes running!") {
       Opts.flag("all", "Whether to show all running processes.", short = "a")
         .orFalse
-        .map(ShowProcesses)
+        .map(ShowProcesses.apply)
     }
   // showProcessesOpts: Opts[ShowProcesses] = Opts(ps)
 
@@ -180,12 +193,23 @@ object DeclineDockerTry extends CommandIOApp(
 
   val buildOpts: Opts[BuildImage] =
     Opts.subcommand("build", "Builds a docker image!") {
-      (dockerFileOpts, pathOpts).mapN(BuildImage)
+      (dockerFileOpts, pathOpts).mapN(BuildImage.apply)
     }
   // buildOpts: Opts[BuildImage] = Opts(build)
 
 
 
+object DeclineRefinedTry extends App:
+  type PosInt = Int Refined Positive
+
+  val lines = Command("lines", "Parse a positive number of lines.") {
+    Opts.argument[PosInt]("count")
+  }
+
+  println(lines.parse(Seq("10")))
+  // res0: Either[Help, PosInt] = Right(10)
+  println(lines.parse(Seq("0")))
+  // res1: Either[Help, PosInt] = Left(Predicate failed: (0 > 0).
 
 
 
