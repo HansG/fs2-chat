@@ -186,20 +186,28 @@ object DeclineDockerAppTry extends IOApp:
 
   //  help =>  IO.raiseError( new Exception(s"${help}") ) ,
 
-  def effect(cmd: String ) = command.parse(cmd.split(" ")).fold { help =>  IO (  help.toString ),
-    prod  => prod  match  {
-          case c @ ShowProcesses(all) => IO("Command Execute: ShowProcesses" + c)
-          case c @ BuildImage(dockerFile, path) => IO("Command Execute: BuildImage  " + c)//$dockerFile  $path
-        }
-  }
 
+  def effect(cmd: String ): IO[String]  = command.parse(cmd.split(" ")).fold ( //zwingend mit '(' (nicht mit '{'..)), dagegen match mit '{'
+    help  =>  IO.delay( "help: "+ help.toString )  ,
+    (prod : Product) => prod  match  {
+      case c @ ShowProcesses(all) => IO("Command Execute: ShowProcesses  $all" + c)
+      case BuildImage(dockerFile, path) => IO(s"Command Execute: BuildImage  ${dockerFile}  $path" )//$dockerFile  $path
+    }
+  )
+ // def effect(cmd: String ): IO[String]  = command.parse(cmd.split(" ")).fold { help =>  IO (  help.toString ) }
+/*,
+prod  => prod  match  {
+  case c @ ShowProcesses(all) => IO("Command Execute: ShowProcesses" + c)
+  case c @ BuildImage(dockerFile, path) => IO("Command Execute: BuildImage  " + c)//$dockerFile  $path
+}
+*/
   override def run(args: List[String]): IO[ExitCode] =
     IO(StdIn.readLine).flatMap { line =>
-      effect(line).handleErrorWith { ex =>
+      effect(line).map(println(_)).handleErrorWith { ex =>
         IO(println(s"Error ${ex}"))
       }
     }.replicateA(10).map(_ => ExitCode.Success)
-
+     //
 
 object DeclineDockerTry extends CommandIOApp(
   name = "docker",
