@@ -29,6 +29,7 @@ mit scala-cli laufen lassen:
 https://mpkocher.github.io/2022/06/02/CLI-App-leveraging-ZIO-and-Decline-using-scala-cli/
 siehe oben: //> using
 scala-cli run DeclineCatsTry.scala -- build -f hallo.scala c:/se   -> Command Execute: BuildImage(Some(hallo.scala),c:/se)
+   Nota: -- :ist Separator für args von main/run Methode , "-f" ist ein Opts.option, "hallo.scala" ist ein Opts.argument
 scala-cli run DeclineCatsTry.scala -- build  c:/se                 -> Command Execute: BuildImage(None,c:/se)
 oder
 scala-cli package --jvm 17 DeclineCatsTry.scala
