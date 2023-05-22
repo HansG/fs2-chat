@@ -8,17 +8,17 @@
 package fs2chat.client
 
 
-import java.net.URI
-import scala.concurrent.duration.Duration
-import java.nio.file.Path
 import cats.effect.*
 import cats.implicits.*
 import com.monovore.decline.*
 import com.monovore.decline.effect.*
+import com.monovore.decline.refined.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-import com.monovore.decline.refined.*
 
+import java.net.URI
+import java.nio.file.Path
+import scala.concurrent.duration.Duration
 import scala.io.StdIn
 
 

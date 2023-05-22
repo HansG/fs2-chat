@@ -4,9 +4,9 @@ import cats.effect.{ExitCode, IO, IOApp, Sync}
 import cats.implicits.*
 import com.comcast.ip4s.*
 import com.monovore.decline.*
-import fs2chat.{Console, Protocol, UserQuit, Username}
 import fs2.Stream
 import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
+import fs2chat.{Console, Protocol, UserQuit, Username}
 
 import scala.io.StdIn
 
