@@ -1,7 +1,7 @@
 organization := "co.fs2"
 name := "fs2-chat"
 
-scalaVersion := "3.2.1"
+scalaVersion := "3.3.1"
 val Http4sVersion = "0.23.18"
 
 libraryDependencies ++= Seq(
@@ -12,7 +12,10 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-effect" % "3.5.0",
   "com.monovore" %% "decline" % "2.4.1",
   "com.monovore" %% "decline-effect" % "2.4.1",
-  "com.monovore" %% "decline-refined" % "2.4.1"
+  "com.monovore" %% "decline-refined" % "2.4.1",
+  "com.softwaremill.sttp.openai" %% "core" % "0.1.1",
+  "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.10.6",
+  "com.augustnagro" %% "magnum" % "1.1.1"
   //, "dev.zio" %% "zio" % "1.0.14"
 
 )
