@@ -1,9 +1,11 @@
+package fs2chat.aiTry
+
 import sttp.openai.OpenAISyncClient
 import sttp.openai.requests.completions.chat.ChatRequestResponseData.ChatResponse
 import sttp.openai.requests.completions.chat.ChatRequestBody.{ChatBody, ChatCompletionModel}
 import sttp.openai.requests.completions.chat.message.{Content, Message}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object AI:
   def askDocs(question: String)(using conf: Config, db: Db): String =

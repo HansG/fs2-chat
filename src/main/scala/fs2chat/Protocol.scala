@@ -1,7 +1,8 @@
 package fs2chat
 
+import fs2chat.Protocol.ClientCommand.RequestUsername
 import scodec.Codec
-import scodec.codecs._
+import scodec.codecs.*
 
 /** Defines the messages exchanged between the client and server. */
 object Protocol:

@@ -89,7 +89,7 @@ object Server:
               .flatMap(client => handleClient[F](clients, client, clientSocket))
               .scope
           }
-        }
+        } // Stream[F, Stream[F, Nothing]]
         .parJoinUnbounded
 
   private def handleClient[F[_]: Concurrent: Console](
