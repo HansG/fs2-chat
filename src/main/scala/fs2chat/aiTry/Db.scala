@@ -2,8 +2,6 @@ package fs2chat.aiTry
 
 import com.augustnagro.magnum.*
 
-
-
 /*
 https://github.com/AugustNagro/magnum
 "com.augustnagro" %% "magnum" % "1.1.1"
@@ -16,8 +14,7 @@ val users: Vector[User] = connect(ds):
 
 https://postgresml.org/deployments/6dab4000-b3c6-4786-ae31-7144d2025c70
 postgres://u_ak85ofcmxxmvayf:choyu8nzxoukxxy@02f7e6f1-1adb-4347-835a-02c74fcccb0e.db.cloud.postgresml.org:6432/pgml_ik1ssi2v1qrejda
-*/
-
+ */
 
 class Db(private val ds: javax.sql.DataSource):
 
@@ -40,6 +37,6 @@ class Db(private val ds: javax.sql.DataSource):
             ORDER BY cosine_similarity DESC
             LIMIT 1""".query[Db.QueryResult].run().headOption
     }
-    
+
 object Db:
   case class QueryResult(id: Int, url: String, content: String, similarity: Double)

@@ -6,11 +6,12 @@ import scodec.codecs.*
 
 /** Defines the messages exchanged between the client and server. */
 object Protocol:
-
+  /* bytes <-> case class : Codec - bidirectional: en/de-coder*/
   private val username: Codec[Username] =
     utf8_32.as[Username]
 
   /** Base trait for messages sent from the client to the server. */
+  /* (bytes <-> case class) *- ClientCommand -> bytes <-> ClientCommand   */
   enum ClientCommand:
     case RequestUsername(name: Username)
     case SendMessage(value: String)

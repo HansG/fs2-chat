@@ -90,7 +90,8 @@ object Server:
               .scope
           }
         } // Stream[F, Stream[F, Nothing]]
-        .parJoinUnbounded
+        .parJoinUnbounded //-> das entscheidende: die Werte "Stream[F, Nothing]" aus "map-Funktion: clientSocket -> Wert" laufen parallel (!!<->!!sequentiell) und mit je eigenem scope
+  //scope siehe auch https://softwaremill.com/websocket-chat-using-structured-concurrency-ox-and-tapir/
 
   private def handleClient[F[_]: Concurrent: Console](
       clients: Clients[F],
