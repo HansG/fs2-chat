@@ -3,6 +3,10 @@ package fs2chat.aiTry
 import cats.effect.{IO, IOApp}
 import sttp.tapir.*
 import io.circe.generic.auto.*
+import org.http4s.ember.server.EmberServerBuilder
+import com.comcast.ip4s.{Host, Port}
+import org.http4s.{HttpApp, HttpRoutes}
+import sttp.tapir.server.http4s.Http4sServerInterpreter
 
 import javax.xml.transform.Templates
 
@@ -23,7 +27,9 @@ object Http:
   private val index =
     endpoint.get
       .out(htmlBodyUtf8)
-      .serverLogic(_ => Right(Templates.index()))
+    .serverLogic(_ =>
+      IO(Right("<html><body><h1>Index Page</h1></body></html>")) )
+//      .serverLogic(_ => Right(Templates.index()))
 
   private def inquire(using Config, Db) =
     endpoint.post
@@ -36,9 +42,12 @@ object Http:
             val response = AI.askDocs(question)
             val rendered = MD.render(response)
 
-            Right(UserResponse(rendered))
+            IO(Right(rendered))
+//            Right(UserResponse(rendered))
 
-          case None => Right(Templates.response("Have nothing to ask?"))
+          case None => 
+            IO(Right("Have nothing to ask?"))
+//            Right(Templates.response("Have nothing to ask?"))
       }
 
 
@@ -51,16 +60,20 @@ object Http:
       .port(cfg.port)
       .start()
 
+  given c:Config = Config.apply
 
-  val helloRoute: HttpRoutes[IO] = Http4sServerInterpreter[IO]().toRoutes(inquire)
+  val ds: javax.sql.DataSource = ???
+  given d : Db = Db(ds)
+  
+  val helloRoute: HttpRoutes[IO] = Http4sServerInterpreter[IO]().toRoutes(List(index, inquire))
   // Compile the routes to an HttpApp
   val httpApp: HttpApp[IO] = helloRoute.orNotFound
   
   // Assemble and run the server
   override def run: IO[Unit] =
     EmberServerBuilder.default[IO]
-      .withHost("localhost")
-      .withPort(8080)
+      .withHost(Host.fromString("localhost").get)
+      .withPort(Port.fromString("8080").get)
       .withHttpApp(httpApp)
       .build
       .use(_ => IO.never) // Keep the server running indefinitely

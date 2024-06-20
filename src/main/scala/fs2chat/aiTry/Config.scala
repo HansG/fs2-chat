@@ -28,10 +28,22 @@ object Config:
       case t: Exception =>
         throw Exception(s"Failed to convert value $strVal for key $key", t)
 
-  def apply(): Config =
+  val apply : Config =
     new Config(
       fromEnv("PORT", _.toInt),
       fromEnv("OPENAI_API_KEY"),
       fromEnv("JDBC_URL"),
       fromEnv("DOCS_BASE_URL")
     )
+    
+  val c = """      "model": "azure/gpt4t",
+    |      "title": "OpenAI",
+    |      "apiBase": "https://litellm.intern-prod.k8s.akdb.net",
+    |      "completionOptions": {},
+    |      "provider": "openai",
+    |      "apiKey": "sk-NqaxJrLlcxxfC5LVCDoQaw",
+    |      "requestOptions": {
+    |        "caBundlePath": "C:\\Users\\GailH\\AKDB-StammCA.crt"
+    |      }
+    |""".stripMargin
+   
