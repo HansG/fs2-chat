@@ -2,26 +2,23 @@ package fs2chat.aiTry
 
 import cats.effect.{IO, IOApp}
 import sttp.tapir.*
-import io.circe.generic.auto.*
 import org.http4s.ember.server.EmberServerBuilder
 import com.comcast.ip4s.{Host, Port}
 import org.http4s.{HttpApp, HttpRoutes}
 import sttp.tapir.server.http4s.Http4sServerInterpreter
-
-import javax.xml.transform.Templates
-
-//import sttp.tapir.files.*
-//import sttp.tapir.server.jdkhttp.*
-import java.util.concurrent.Executors
+import cats.effect.*
+/*
 import cats.effect.{IO, IOApp}
+import io.circe.generic.auto.*
 import sttp.tapir.json.circe._
-import cats.effect._
+import java.util.concurrent.Executors
 import io.circe.generic.auto._
 import scala.concurrent.ExecutionContext
-//import org.http4s.ember.server.EmberServerBuilder
-//import org.http4s.implicits._
-//import sttp.tapir.server.http4s.Http4sServerInterpreter
-//import org.http4s._
+import sttp.tapir.files.*
+import sttp.tapir.server.jdkhttp.*
+import org.http4s.implicits._
+import org.http4s._
+*/
 
 object Http:
   private val index =
@@ -50,30 +47,35 @@ object Http:
 //            Right(Templates.response("Have nothing to ask?"))
       }
 
-
+  
   def startServer()(using cfg: Config, db: Db) =
-    JdkHttpServer()
-      .executor(Executors.newVirtualThreadPerTaskExecutor())
-      .addEndpoint(staticResourcesGetServerEndpoint("static")(classOf[App].getClassLoader, "/"))
-      .addEndpoint(inquire)
-      .addEndpoint(index)
-      .port(cfg.port)
-      .start()
-
-  given c:Config = Config.apply
-
-  val ds: javax.sql.DataSource = ???
-  given d : Db = Db(ds)
-  
-  val helloRoute: HttpRoutes[IO] = Http4sServerInterpreter[IO]().toRoutes(List(index, inquire))
-  // Compile the routes to an HttpApp
-  val httpApp: HttpApp[IO] = helloRoute.orNotFound
-  
-  // Assemble and run the server
-  override def run: IO[Unit] =
+    val helloRoute: HttpRoutes[IO] = Http4sServerInterpreter[IO]().toRoutes(List(index, inquire))
+    // Compile the routes to an HttpApp
+    val httpApp: HttpApp[IO] = helloRoute.orNotFound
+    // Assemble and run the server
     EmberServerBuilder.default[IO]
       .withHost(Host.fromString("localhost").get)
       .withPort(Port.fromString("8080").get)
       .withHttpApp(httpApp)
       .build
       .use(_ => IO.never) // Keep the server running indefinitely
+      
+  /*
+    def startServer()(using cfg: Config, db: Db) =
+      JdkHttpServer()
+        .executor(Executors.newVirtualThreadPerTaskExecutor())
+        .addEndpoint(staticResourcesGetServerEndpoint("static")(classOf[App].getClassLoader, "/"))
+        .addEndpoint(inquire)
+        .addEndpoint(index)
+        .port(cfg.port)
+        .start()
+  */
+  
+
+object HttpTry extends IOApp:
+  given c:Config = Config.apply
+  val ds: javax.sql.DataSource = ???
+  given d : Db = Db(ds)
+  
+  override def run(args: List[String]): IO[ExitCode] = Http.startServer().as(ExitCode.Success)
+  
