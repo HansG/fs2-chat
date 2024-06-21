@@ -7,6 +7,10 @@ import sttp.openai.requests.completions.chat.message.{Content, Message}
 
 import scala.util.{Failure, Success, Try}
 
+
+/*
+§§ https://virtuslab.com/blog/technology/how-to-build-ai-apps-with-scala-3-and-besom/
+ */
 object AI:
   def askDocs(question: String)(using conf: Config, db: Db): String =
     val openAI = OpenAISyncClient(conf.openAIApiKey)

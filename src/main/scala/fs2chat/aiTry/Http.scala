@@ -7,7 +7,11 @@ import com.comcast.ip4s.{Host, Port}
 import org.http4s.{HttpApp, HttpRoutes}
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import cats.effect.*
+import sttp.tapir.server.ServerEndpoint.Full
 /*
+//import sttp.tapir.files.*
+//import sttp.tapir.server.jdkhttp.*
+import java.util.concurrent.Executors
 import cats.effect.{IO, IOApp}
 import io.circe.generic.auto.*
 import sttp.tapir.json.circe._
@@ -21,14 +25,14 @@ import org.http4s._
 */
 
 object Http:
-  private val index =
+  private val index: Full[Unit, Unit, Unit, Unit, String, Any, IO] =
     endpoint.get
       .out(htmlBodyUtf8)
     .serverLogic(_ =>
       IO(Right("<html><body><h1>Index Page</h1></body></html>")) )
 //      .serverLogic(_ => Right(Templates.index()))
 
-  private def inquire(using Config, Db) =
+  private def inquire(using Config, Db): Full[Unit, Unit, Map[String, String], Unit, String, Any, IO] =
     endpoint.post
       .in("inquire")
       .in(formBody[Map[String, String]])
@@ -47,7 +51,7 @@ object Http:
 //            Right(Templates.response("Have nothing to ask?"))
       }
 
-  
+
   def startServer()(using cfg: Config, db: Db) =
     val helloRoute: HttpRoutes[IO] = Http4sServerInterpreter[IO]().toRoutes(List(index, inquire))
     // Compile the routes to an HttpApp
@@ -59,7 +63,7 @@ object Http:
       .withHttpApp(httpApp)
       .build
       .use(_ => IO.never) // Keep the server running indefinitely
-      
+
   /*
     def startServer()(using cfg: Config, db: Db) =
       JdkHttpServer()
@@ -70,7 +74,7 @@ object Http:
         .port(cfg.port)
         .start()
   */
-  
+
 
 object HttpTry extends IOApp:
   given c:Config = Config.apply
@@ -78,4 +82,3 @@ object HttpTry extends IOApp:
   given d : Db = Db(ds)
   
   override def run(args: List[String]): IO[ExitCode] = Http.startServer().as(ExitCode.Success)
-  

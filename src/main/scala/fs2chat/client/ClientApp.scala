@@ -5,6 +5,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.comcast.ip4s._
 import com.monovore.decline._
+import fs2chat._
 
 object ClientApp extends IOApp:
   private val argsParser: Command[(Username, SocketAddress[IpAddress])] =
